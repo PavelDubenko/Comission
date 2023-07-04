@@ -1,5 +1,6 @@
-fun main () {
-     println(calculateCommission("VK Pay", 5000, 1000))
+const val ERROR_LIMIT = -1.0
+fun main() {
+    println(calculateCommission("VK Pay", 0, 5000))
 }
 
 fun calculateCommission(cardType: String, previousTransfers: Int, transferAmount: Int): Double {
@@ -8,24 +9,35 @@ fun calculateCommission(cardType: String, previousTransfers: Int, transferAmount
     val mastercardMaestroCommissionRate = 0.006
     val mastercardMaestroCommissionFixed = 20
     val visaMirCommissionRate = 0.0075
+    val cardDayLimit = 150_000
+    val cardMonthLimit = 600_000
 
 
     var commission = 0.0
 
     when (cardType) {
         "Mastercard", "Maestro" -> {
-            if (previousTransfers >= mastercardMaestroLimit) {
-                commission = transferAmount * mastercardMaestroCommissionRate + mastercardMaestroCommissionFixed
-            }
+            commission =
+                if (transferAmount + previousTransfers <= cardMonthLimit && transferAmount <= cardDayLimit && previousTransfers >= mastercardMaestroLimit)
+                    transferAmount * mastercardMaestroCommissionRate + mastercardMaestroCommissionFixed
+                else ERROR_LIMIT
+
+
         }
+
         "Visa", "Мир" -> {
-            commission = transferAmount * visaMirCommissionRate
+            commission = if (transferAmount + previousTransfers <= cardMonthLimit && transferAmount <= cardDayLimit)
+                transferAmount * visaMirCommissionRate
+            else ERROR_LIMIT
             if (commission < visaMirMinimum) {
                 commission = visaMirMinimum.toDouble()
             }
         }
+
         "VK Pay" -> {
-            commission = 0.0
+            commission = if (transferAmount <= 15_000 && (transferAmount + previousTransfers) <= 40_000)
+                0.0
+            else ERROR_LIMIT
         }
     }
 
